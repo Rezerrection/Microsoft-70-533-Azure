@@ -19,3 +19,14 @@ Get-AzureRmVMSize $location | Select-Object name
 Get-AzureRmVMImageSku  -PublisherName $publisher -Offer $offer -Location $location
 
 #Get-AzureRmVMImage  -Location $location -PublisherName "microsoft" 
+
+############## APP SERVICE PLANS , WEBAPP STUFF
+Get-AzureRmResourceGroup 
+$resourcegroupname = "TestGMAzurePlanPS"
+$appserviceplanname = "TestGMAzureAPPPlanPS"
+$webappname = "TestGMAzureWebAppPS"
+New-AzureRmResourceGroup -Name $resourcegroupname -Location $location 
+New-AzureRmAppServicePlan -name $appserviceplanname -Location $location -ResourceGroupName $resourcegroupname -Tier Standard -NumberofWorkers 1 -WorkerSize Small
+New-AzureRmWebApp -Name $webappname -ResourceGroupName $resourcegroupname  -Location $location -AppServicePlan $appserviceplanname
+
+#Remove-AzureRmResourceGroup -Name $resourcegroupname
