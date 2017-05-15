@@ -8,6 +8,3 @@ Get-AzureRmRoleDefinition
 
 
 
-
- git config --global user.email "gabriel@cloudconfusion.co.uk"
-  git config --global user.name "gabrielmccoll"
