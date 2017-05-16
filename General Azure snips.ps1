@@ -23,3 +23,5 @@ update-azurermvm -ResourceGroupName -VM $vm
 
 get-azurermvm | Set-AzureRmVMOSDisk
 Get-AzureRmVM | Set-AzureRmVMOSDisk
+
+Add-AzureRmVMDataDisk 
