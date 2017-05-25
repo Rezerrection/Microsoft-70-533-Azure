@@ -7,7 +7,7 @@ Things to do for the virtual machines
 - Add a new disk to existing VM.   
 - Configure disk caching
 - plan storage capacity
--  hconfigure operating system disk redundancy
+- configure operating system disk redundancy
 - configure shared storage using Azure File service
 - configure geo-replication
 - encrypt disks
@@ -21,6 +21,7 @@ Things to do for the virtual machines
 - deploy ARM VM Scale Sets (VMSS)
 - configure ARM VMSS auto-scale
 /#>
+
 
 
 Login-AzureRmAccount 
