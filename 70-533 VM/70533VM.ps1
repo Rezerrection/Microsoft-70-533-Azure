@@ -22,8 +22,6 @@ Things to do for the virtual machines
 - configure ARM VMSS auto-scale
 /#>
 
-
-
 Login-AzureRmAccount 
 Get-AzureRmSubscription | Select-AzureRmSubscription
 Get-AzureRmSubscription | Set-AzureRmContext 
@@ -31,6 +29,7 @@ Get-AzureRmSubscription | Set-AzureRmContext
 $location = "westeurope"
 $publisher = "MicrosoftWindowsServer"
 $offer = "WindowsServer"
+$sku = "2016-Datacenter"
 #list of image publishers, main one for vms is MicrosoftWindowsServer it seems
 Get-AzureRmVMImagePublisher -Location $location
 
