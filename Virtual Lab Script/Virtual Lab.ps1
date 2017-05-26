@@ -24,10 +24,20 @@ $machinesize ="Basic_A0"
 $OSDiskName = $VMName + "OSDisk"
 
 ## Storage
-$StorageName = "testlabgmstorage"
-$StorageType = "Standard_LRS"
 
-#network 1
+##storage variables storage account names must always be lowercase
+$StorageType = "Standard_LRS"
+$StorAcVM = "vmstestgm70533"
+$StorAcApp = "appstestgm70533"
+$StorAcDiag  = "diagtestgm70533"
+$StorageName = @($StorAcVM,$StorAcApp,$StorAcDiag)
+$RGname = "testlabgmtest70533"
+$location = "westeurope"
+
+
+
+#network variables
+##network 1 and 2 subnets
 $Vnet1name = "TestlabgmVnet1"
 $vnet1range = "172.16.0.0/16"
 
@@ -37,49 +47,79 @@ $vnet1SN1range = "172.16.5.0/24"
 $Vnet1SN2name = "Vnet1SN2"
 $vnet1SN2range = "172.16.10.0/24"
 
-#network 2
+#network 2 - 1 subnet
 $Vnet2name = "TestlabgmVnet2"
 $vnet2range = "172.20.0.0/16"
 
-## Network card 1
-$InterfaceName = "VM1networkcard"
-$Subnet1Name = "$Vnet1SN1name"
-$VNetName = "$vnet"
-$VNetAddressPrefix = "10.0.0.0/16"
-$VNetSubnetAddressPrefix = "10.0.0.0/24"
+$Vnet2SN1name = "Vnet1SN2"
+$vnet2SN1range = "172.20.5.0/24"
 
-##Network card 2
-
-$InterfaceName = "ServerInterface06"
-$Subnet1Name = "Subnet1"
-$VNetName = "VNet09"
-$VNetAddressPrefix = "10.0.0.0/16"
-$VNetSubnetAddressPrefix = "10.0.0.0/24"
-
-$StorAcVM = "VMstestgm70533"
-$StorAcApp = "Appstestgm70533"
-$StorAcDiag  = "Diagtestgm70533"
 
 $availSet1 = "VMAVset"
 $availSet2 = "AppAVset"
 # 1. Create new resource group>
 New-AzureRmResourceGroup -Name $RGname -Location $location
 
-# Network
-$PIp = New-AzureRmPublicIpAddress -Name $InterfaceName -ResourceGroupName $ResourceGroupName `-Location $Location -AllocationMethod Dynamic
-$SubnetConfig = New-AzureRmVirtualNetworkSubnetConfig -Name $Subnet1Name -AddressPrefix $VNetSubnetAddressPrefix
-$VNet = New-AzureRmVirtualNetwork -Name $VNetName -ResourceGroupName $ResourceGroupName -Location $Location -AddressPrefix $VNetAddressPrefix -Subnet $SubnetConfig
-$Interface = New-AzureRmNetworkInterface -Name $InterfaceName -ResourceGroupName $ResourceGroupName -Location $Location -SubnetId $VNet.Subnets[0].Id -PublicIpAddressId $PIp.Id
+############# build the network 2-6
+#okay so, make the NSG rule, make the NSG, make the subnets config in memory, then actually create the network with subnets
+#rdp rule created to allow RDP in, this is just config - i.e. in Memory
+$rdpRule = New-AzureRmNetworkSecurityRuleConfig -Name "rdp-rule" -Description "Allow RDP" -Access "Allow" -Protocol "Tcp"`
+     -Direction Inbound -Priority 100 -SourceAddressPrefix "Internet" -SourcePortRange * `
+     -DestinationAddressPrefix * -DestinationPortRange 3389
+
+#this creates the actual NSG which will be used for both networks and all subs
+$networkSecurityGroup = New-AzureRmNetworkSecurityGroup -ResourceGroupName $RGname -Location $location `
+-Name "NSG-FrontEnd" -SecurityRules $rdpRule
+
+#this creates both the subnets for network 1 using the variables declared about
+$frontendSubnet = New-AzureRmVirtualNetworkSubnetConfig -Name $Vnet1SN1name `
+-AddressPrefix $vnet1SN1range -NetworkSecurityGroup $networkSecurityGroup
+
+$backendSubnet = New-AzureRmVirtualNetworkSubnetConfig -Name $Vnet1SN2name -AddressPrefix `
+$vnet1SN2range -NetworkSecurityGroup $networkSecurityGroup
+
+# this creates the first network, using the subnets and NSG described above
+$Vnet1 = New-AzureRmVirtualNetwork -Name $Vnet1name -ResourceGroupName $RGname `
+-Location $location -AddressPrefix $vnet1range -Subnet $frontendSubnet,$backendSubnet
+
+#this creates  the subnets for network 2 using the variables declared about
+$frontendSubnet2 = New-AzureRmVirtualNetworkSubnetConfig -Name $Vnet2SN1name `
+-AddressPrefix $vnet2SN1range -NetworkSecurityGroup $networkSecurityGroup
+
+$vnet2 = New-AzureRmVirtualNetwork -Name $Vnet2name -ResourceGroupName $RGname `
+ -Location $location -AddressPrefix $vnet2range -Subnet $frontendSubnet2
+
+#####################network end 
 
 
 
-# make Storage
-$StorageAccount = New-AzureRmStorageAccount -ResourceGroupName $ResourceGroupName -Name $StorageName -Type $StorageType -Location $Location
+
+
+# make Storage account 
+$StorageName | ForEach-Object {
+    New-AzureRmStorageAccount -ResourceGroupName $RGname -Name $_ -Type $StorageType -Location $location
+
+}
 
 
 # Compute
 
-## Setup local VM object
+#make the network cards for the VMs
+
+# make 2 public IPs, attach them to 2 network cards
+$Nicname1 = "Nic1"
+$NicName2 = "Nic2"
+
+$PIp1 = New-AzureRmPublicIpAddress -Name $Nicname1 -ResourceGroupName $Rgname -Location $Location -AllocationMethod Dynamic
+$PIp2 = New-AzureRmPublicIpAddress -Name $Nicname2 -ResourceGroupName $Rgname -Location $Location -AllocationMethod Dynamic
+
+
+$Nic1 = New-AzureRmNetworkInterface -Name $Nicname1 -ResourceGroupName $Rgname -Location $Location -SubnetId $Vnet1name.Subnets[0].Id -PublicIpAddressId $PIp.Id
+$Nic2= New-AzureRmNetworkInterface -Name $NicName2 -ResourceGroupName $Rgname -Location $Location -SubnetId $VNet.Subnets[0].Id -PublicIpAddressId $PIp.Id
+
+
+
+## Setup local VM object in memory, you'll need a long password
 $Credential = Get-Credential
 $VirtualMachine = New-AzureRmVMConfig -VMName $VMName -VMSize $VMSize
 $VirtualMachine = Set-AzureRmVMOperatingSystem -VM $VirtualMachine -Windows -ComputerName $ComputerName -Credential $Credential -ProvisionVMAgent -EnableAutoUpdate
@@ -88,5 +128,13 @@ $VirtualMachine = Add-AzureRmVMNetworkInterface -VM $VirtualMachine -Id $Interfa
 $OSDiskUri = $StorageAccount.PrimaryEndpoints.Blob.ToString() + "vhds/" + $OSDiskName + ".vhd"
 $VirtualMachine = Set-AzureRmVMOSDisk -VM $VirtualMachine -Name $OSDiskName -VhdUri $OSDiskUri -CreateOption FromImage
 
+
+##make netwrkcards for VMs
+
+$PIp = New-AzureRmPublicIpAddress -Name $InterfaceName -ResourceGroupName $Rgname `-Location $Location -AllocationMethod Dynamic
+$SubnetConfig = New-AzureRmVirtualNetworkSubnetConfig -Name $Subnet1Name -AddressPrefix $VNetSubnetAddressPrefix
+$VNet = New-AzureRmVirtualNetwork -Name $VNetName -ResourceGroupName $Rgname -Location $Location -AddressPrefix $VNetAddressPrefix -Subnet $SubnetConfig
+$Interface = New-AzureRmNetworkInterface -Name $InterfaceName -ResourceGroupName $Rgname -Location $Location -SubnetId $VNet.Subnets[0].Id -PublicIpAddressId $PIp.Id
+
 ## Create the VM in Azure
-New-AzureRmVM -ResourceGroupName $ResourceGroupName -Location $Location -VM $VirtualMachine
+New-AzureRmVM -ResourceGroupName $Rgname -Location $Location -VM $VirtualMachine

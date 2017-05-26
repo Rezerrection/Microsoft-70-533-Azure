@@ -26,10 +26,7 @@ Login-AzureRmAccount
 Get-AzureRmSubscription | Select-AzureRmSubscription
 Get-AzureRmSubscription | Set-AzureRmContext 
 
-$location = "westeurope"
-$publisher = "MicrosoftWindowsServer"
-$offer = "WindowsServer"
-$sku = "2016-Datacenter"
+
 
 #get all the vm extensions first line get all the image publishers, then all the image extensions types of the publishers, then all the extension images for each type
 Get-AzureRmVMImagePublisher -Location $location |
@@ -52,44 +49,43 @@ Get-AzureRmVMImageSku  -PublisherName $publisher -Offer $offer -Location $locati
 
 Get-AzureRmVMImage  -Location $location -PublisherName "microsoft" 
 
-<#
-# Variables    
-## Global
-$ResourceGroupName = "ResourceGroup11"
-$Location = "WestEurope"
+#you need to have made the networks previously and this will grab one of them and then the next grab the subnet ids
 
-## Storage
-$StorageName = "generalstorage6cc"
-$StorageType = "Standard_GRS"
-
-## Network
-$InterfaceName = "ServerInterface06"
-$Subnet1Name = "Subnet1"
-$VNetName = "VNet09"
-$VNetAddressPrefix = "10.0.0.0/16"
-$VNetSubnetAddressPrefix = "10.0.0.0/24"
-
-## Compute
-$VMName = "VirtualMachine12"
-$ComputerName = "Server22"
-$VMSize = "Standard_A2"
-$OSDiskName = $VMName + "OSDisk"
-
-# Resource Group
-New-AzureRmResourceGroup -Name $ResourceGroupName -Location $Location
-
-# Storage
-$StorageAccount = New-AzureRmStorageAccount -ResourceGroupName $ResourceGroupName -Name $StorageName -Type $StorageType -Location $Location
-
-# Network
-$PIp = New-AzureRmPublicIpAddress -Name $InterfaceName -ResourceGroupName $ResourceGroupName -Location $Location -AllocationMethod Dynamic
-$SubnetConfig = New-AzureRmVirtualNetworkSubnetConfig -Name $Subnet1Name -AddressPrefix $VNetSubnetAddressPrefix
-$VNet = New-AzureRmVirtualNetwork -Name $VNetName -ResourceGroupName $ResourceGroupName -Location $Location -AddressPrefix $VNetAddressPrefix -Subnet $SubnetConfig
-$Interface = New-AzureRmNetworkInterface -Name $InterfaceName -ResourceGroupName $ResourceGroupName -Location $Location -SubnetId $VNet.Subnets[0].Id -PublicIpAddressId $PIp.Id
+$vnet1 = (Get-AzureRmVirtualNetwork)[0]
+$vnet2 = (Get-AzureRmVirtualNetwork)[1]
+$Subnet1 = $Vnet1.Subnets[0].Id
+$Subnet2 = $Vnet1.Subnets[1].Id
 
 # Compute
 
-## Setup local VM object
+#make the network cards for the VMs
+
+# make 2 public IPs, attach them to 2 network cards
+$Nicname1 = "Nic1"
+$NicName2 = "Nic2"
+
+$PIp1 = New-AzureRmPublicIpAddress -Name $Nicname1 -ResourceGroupName $Rgname -Location $Location -AllocationMethod Dynamic
+$PIp2 = New-AzureRmPublicIpAddress -Name $Nicname2 -ResourceGroupName $Rgname -Location $Location -AllocationMethod Dynamic
+
+
+$Nic1 = New-AzureRmNetworkInterface -Name $Nicname1 -ResourceGroupName $Rgname -Location $Location -SubnetId $Subnet1 -PublicIpAddressId $PIp1.Id
+$Nic2= New-AzureRmNetworkInterface -Name $NicName2 -ResourceGroupName $Rgname -Location $Location -SubnetId $Subnet2 -PublicIpAddressId $PIp2.Id
+
+
+
+## Setup local VM object in memory, you'll need a long password
+
+$location = "westeurope"
+$publisher = "MicrosoftWindowsServer"
+$offer = "WindowsServer"
+$sku = "2016-Datacenter"
+$offer = "WindowsServer"
+$sku = "2016-Datacenter" 
+$machinesize ="Basic_A0"
+$OSDiskName = $VMName + "OSDisk"
+
+
+
 $Credential = Get-Credential
 $VirtualMachine = New-AzureRmVMConfig -VMName $VMName -VMSize $VMSize
 $VirtualMachine = Set-AzureRmVMOperatingSystem -VM $VirtualMachine -Windows -ComputerName $ComputerName -Credential $Credential -ProvisionVMAgent -EnableAutoUpdate
@@ -98,6 +94,10 @@ $VirtualMachine = Add-AzureRmVMNetworkInterface -VM $VirtualMachine -Id $Interfa
 $OSDiskUri = $StorageAccount.PrimaryEndpoints.Blob.ToString() + "vhds/" + $OSDiskName + ".vhd"
 $VirtualMachine = Set-AzureRmVMOSDisk -VM $VirtualMachine -Name $OSDiskName -VhdUri $OSDiskUri -CreateOption FromImage
 
-## Create the VM in Azure
-New-AzureRmVM -ResourceGroupName $ResourceGroupName -Location $Location -VM $VirtualMachine
-#>
+
+##make netwrkcards for VMs
+
+$PIp = New-AzureRmPublicIpAddress -Name $InterfaceName -ResourceGroupName $Rgname `-Location $Location -AllocationMethod Dynamic
+$SubnetConfig = New-AzureRmVirtualNetworkSubnetConfig -Name $Subnet1Name -AddressPrefix $VNetSubnetAddressPrefix
+$VNet = New-AzureRmVirtualNetwork -Name $VNetName -ResourceGroupName $Rgname -Location $Location -AddressPrefix $VNetAddressPrefix -Subnet $SubnetConfig
+$Interface = New-AzureRmNetworkInterface -Name $InterfaceName -ResourceGroupName $Rgname -Location $Location -SubnetId $VNet.Subnets[0].Id -PublicIpAddressId $PIp.Id

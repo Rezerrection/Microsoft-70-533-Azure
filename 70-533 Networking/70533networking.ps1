@@ -30,7 +30,7 @@ $rdpRule = New-AzureRmNetworkSecurityRuleConfig -Name "rdp-rule" -Description "A
      -DestinationAddressPrefix * -DestinationPortRange 3389
 
 #this creates the actual NSG which will be used for both networks and all subs
-$networkSecurityGroup = New-AzureRmNetworkSecurityGroup -ResourceGroupName $RGname -Location centralus `
+$networkSecurityGroup = New-AzureRmNetworkSecurityGroup -ResourceGroupName $RGname -Location $location `
 -Name "NSG-FrontEnd" -SecurityRules $rdpRule
 
 #this creates both the subnets for network 1 using the variables declared about
@@ -42,14 +42,14 @@ $vnet1SN2range -NetworkSecurityGroup $networkSecurityGroup
 
 
 # this creates the first network, using the subnets and NSG described above
-New-AzureRmVirtualNetwork -Name $Vnet1name -ResourceGroupName $RGname `
+$vnet1 = New-AzureRmVirtualNetwork -Name $Vnet1name -ResourceGroupName $RGname `
 -Location $location -AddressPrefix $vnet1range -Subnet $frontendSubnet,$backendSubnet
 
 
 
-#this creates both the subnets for network 1 using the variables declared about
+#this creates the subnet for network 2 using the variables declared about
 $frontendSubnet2 = New-AzureRmVirtualNetworkSubnetConfig -Name $Vnet2SN1name `
 -AddressPrefix $vnet2SN1range -NetworkSecurityGroup $networkSecurityGroup
 
- New-AzureRmVirtualNetwork -Name $Vnet2name -ResourceGroupName $RGname `
+ $vnet2 = New-AzureRmVirtualNetwork -Name $Vnet2name -ResourceGroupName $RGname `
  -Location $location -AddressPrefix $vnet2range -Subnet $frontendSubnet2
