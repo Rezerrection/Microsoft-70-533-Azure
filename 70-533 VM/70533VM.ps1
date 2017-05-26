@@ -30,8 +30,15 @@ $location = "westeurope"
 $publisher = "MicrosoftWindowsServer"
 $offer = "WindowsServer"
 $sku = "2016-Datacenter"
+
+#get all the vm extensions first line get all the image publishers, then all the image extensions types of the publishers, then all the extension images for each type
+Get-AzureRmVMImagePublisher -Location $location |
+Get-AzureRmVMExtensionImageType |
+Get-AzureRmVMExtensionImage | select type -Unique | sort type
+
+
 #list of image publishers, main one for vms is MicrosoftWindowsServer it seems
-Get-AzureRmVMImagePublisher -Location $location
+Get-AzureRmVMImagePublisher -Location $locationb
 
 #then you have to get the offer, which appears to be WindowsServer
 Get-AzureRmVMImageOffer -Location $location -PublisherName $publisher

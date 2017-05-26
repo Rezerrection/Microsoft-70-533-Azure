@@ -41,13 +41,10 @@ $vnet1SN2range = "172.16.10.0/24"
 $Vnet2name = "TestlabgmVnet2"
 $vnet2range = "172.20.0.0/16"
 
-
-
-
 ## Network card 1
-$InterfaceName = "ServerInterface06"
-$Subnet1Name = "Subnet1"
-$VNetName = "VNet09"
+$InterfaceName = "VM1networkcard"
+$Subnet1Name = "$Vnet1SN1name"
+$VNetName = "$vnet"
 $VNetAddressPrefix = "10.0.0.0/16"
 $VNetSubnetAddressPrefix = "10.0.0.0/24"
 
@@ -68,22 +65,17 @@ $availSet2 = "AppAVset"
 # 1. Create new resource group>
 New-AzureRmResourceGroup -Name $RGname -Location $location
 
-
-
-
-
-
-# Resource Group
-New-AzureRmResourceGroup -Name $ResourceGroupName -Location $Location
-
-# Storage
-$StorageAccount = New-AzureRmStorageAccount -ResourceGroupName $ResourceGroupName -Name $StorageName -Type $StorageType -Location $Location
-
 # Network
-$PIp = New-AzureRmPublicIpAddress -Name $InterfaceName -ResourceGroupName $ResourceGroupName -Location $Location -AllocationMethod Dynamic
+$PIp = New-AzureRmPublicIpAddress -Name $InterfaceName -ResourceGroupName $ResourceGroupName `-Location $Location -AllocationMethod Dynamic
 $SubnetConfig = New-AzureRmVirtualNetworkSubnetConfig -Name $Subnet1Name -AddressPrefix $VNetSubnetAddressPrefix
 $VNet = New-AzureRmVirtualNetwork -Name $VNetName -ResourceGroupName $ResourceGroupName -Location $Location -AddressPrefix $VNetAddressPrefix -Subnet $SubnetConfig
 $Interface = New-AzureRmNetworkInterface -Name $InterfaceName -ResourceGroupName $ResourceGroupName -Location $Location -SubnetId $VNet.Subnets[0].Id -PublicIpAddressId $PIp.Id
+
+
+
+# make Storage
+$StorageAccount = New-AzureRmStorageAccount -ResourceGroupName $ResourceGroupName -Name $StorageName -Type $StorageType -Location $Location
+
 
 # Compute
 
