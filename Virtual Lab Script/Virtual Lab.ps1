@@ -21,7 +21,7 @@ $RGname = "Testlabgmtest70533"
 $offer = "WindowsServer"
 $sku = "2016-Datacenter" 
 $machinesize ="Basic_A0"
-$OSDiskName = $VMName + "OSDisk"
+
 
 ## Storage
 

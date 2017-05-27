@@ -56,6 +56,11 @@ $vnet2 = (Get-AzureRmVirtualNetwork)[1]
 $Subnet1 = $Vnet1.Subnets[0].Id
 $Subnet2 = $Vnet1.Subnets[1].Id
 
+#you need to have made the storage account previously too 
+
+$storageaccount = Get-AzureRmStorageAccount -ResourceGroupName $Rgname -Name "vmstestgm70533"
+
+
 # Compute
 
 #make the network cards for the VMs
@@ -69,7 +74,7 @@ $PIp2 = New-AzureRmPublicIpAddress -Name $Nicname2 -ResourceGroupName $Rgname -L
 
 
 $Nic1 = New-AzureRmNetworkInterface -Name $Nicname1 -ResourceGroupName $Rgname -Location $Location -SubnetId $Subnet1 -PublicIpAddressId $PIp1.Id
-$Nic2= New-AzureRmNetworkInterface -Name $NicName2 -ResourceGroupName $Rgname -Location $Location -SubnetId $Subnet2 -PublicIpAddressId $PIp2.Id
+$Nic2 = New-AzureRmNetworkInterface -Name $NicName2 -ResourceGroupName $Rgname -Location $Location -SubnetId $Subnet2 -PublicIpAddressId $PIp2.Id
 
 
 
@@ -77,27 +82,47 @@ $Nic2= New-AzureRmNetworkInterface -Name $NicName2 -ResourceGroupName $Rgname -L
 
 $location = "westeurope"
 $publisher = "MicrosoftWindowsServer"
-$offer = "WindowsServer"
-$sku = "2016-Datacenter"
-$offer = "WindowsServer"
+$Offer = "WindowsServer"
 $sku = "2016-Datacenter" 
-$machinesize ="Basic_A0"
-$OSDiskName = $VMName + "OSDisk"
+$VMSize ="Basic_A0"
+$VMname1 = "VMtest1"   #this will also become the actual Computer object. so within the VM image. i.e. the OS or domain computer name
+$VMname2 = "VMtest2"
+$OSDiskName1 = $VMName1 + "OSDisk"
+$OSDiskName2 = $VMName2 + "OSDisk"
 
-
-
+##get login creds for the actual computers
 $Credential = Get-Credential
-$VirtualMachine = New-AzureRmVMConfig -VMName $VMName -VMSize $VMSize
-$VirtualMachine = Set-AzureRmVMOperatingSystem -VM $VirtualMachine -Windows -ComputerName $ComputerName -Credential $Credential -ProvisionVMAgent -EnableAutoUpdate
-$VirtualMachine = Set-AzureRmVMSourceImage -VM $VirtualMachine -PublisherName MicrosoftWindowsServer -Offer WindowsServer -Skus 2012-R2-Datacenter -Version "latest"
-$VirtualMachine = Add-AzureRmVMNetworkInterface -VM $VirtualMachine -Id $Interface.Id
-$OSDiskUri = $StorageAccount.PrimaryEndpoints.Blob.ToString() + "vhds/" + $OSDiskName + ".vhd"
-$VirtualMachine = Set-AzureRmVMOSDisk -VM $VirtualMachine -Name $OSDiskName -VhdUri $OSDiskUri -CreateOption FromImage
 
+##create vm1
+# basic config, size and name
+$VirtualMachine = New-AzureRmVMConfig -VMName $VMName1 -VMSize $VMSize
+#setting the core image (server 2016 prob. set above in variable)
+$VirtualMachine = Set-AzureRmVMSourceImage -VM $VirtualMachine -PublisherName $publisher -Offer $offer -Skus $sku -Version "latest"
+#setting the OS variables to appy with the deployment, watch for computer name
+$VirtualMachine = Set-AzureRmVMOperatingSystem -VM $VirtualMachine -Windows -ComputerName $vmname1 -Credential $Credential -ProvisionVMAgent -EnableAutoUpdate
+#adding the previously made network card
+$VirtualMachine = Add-AzureRmVMNetworkInterface -VM $VirtualMachine -Id $Nic1.Id
+#add the OS disk location, dont think you actually need the ToString
+$OSDiskUri = $StorageAccount.PrimaryEndpoints.Blob.ToString() + "vhds/" + $OSDiskName1 + ".vhd"
+#lastly the vm OS disk options 
+$VirtualMachine = Set-AzureRmVMOSDisk -VM $VirtualMachine -Name $OSDiskName1 -VhdUri $OSDiskUri -CreateOption FromImage
+ 
+ #create the previously 'built' vm object in Azure
+New-AzureRmVM -ResourceGroupName $Rgname -VM $VirtualMachine -Location $location
 
-##make netwrkcards for VMs
-
-$PIp = New-AzureRmPublicIpAddress -Name $InterfaceName -ResourceGroupName $Rgname `-Location $Location -AllocationMethod Dynamic
-$SubnetConfig = New-AzureRmVirtualNetworkSubnetConfig -Name $Subnet1Name -AddressPrefix $VNetSubnetAddressPrefix
-$VNet = New-AzureRmVirtualNetwork -Name $VNetName -ResourceGroupName $Rgname -Location $Location -AddressPrefix $VNetAddressPrefix -Subnet $SubnetConfig
-$Interface = New-AzureRmNetworkInterface -Name $InterfaceName -ResourceGroupName $Rgname -Location $Location -SubnetId $VNet.Subnets[0].Id -PublicIpAddressId $PIp.Id
+##create vm2
+# basic config, size and name
+$VirtualMachine = New-AzureRmVMConfig -VMName $VMName2 -VMSize $VMSize
+#setting the core image (server 2016 prob. set above in variable)
+$VirtualMachine = Set-AzureRmVMSourceImage -VM $VirtualMachine -PublisherName $publisher -Offer $offer -Skus $sku -Version "latest"
+#setting the OS variables to appy with the deployment, watch for computer name
+$VirtualMachine = Set-AzureRmVMOperatingSystem -VM $VirtualMachine -Windows -ComputerName $vmname2 -Credential $Credential -ProvisionVMAgent -EnableAutoUpdate
+#adding the previously made network card
+$VirtualMachine = Add-AzureRmVMNetworkInterface -VM $VirtualMachine -Id $Nic2.Id
+#add the OS disk location, dont think you actually need the ToString
+$OSDiskUri = $StorageAccount.PrimaryEndpoints.Blob.ToString() + "vhds/" + $OSDiskName2 + ".vhd"
+#lastly the vm OS disk options 
+$VirtualMachine = Set-AzureRmVMOSDisk -VM $VirtualMachine -Name $OSDiskName2 -VhdUri $OSDiskUri -CreateOption FromImage
+ 
+ #create the previously 'built' vm object in Azure
+New-AzureRmVM -ResourceGroupName $Rgname -VM $VirtualMachine -Location $location
