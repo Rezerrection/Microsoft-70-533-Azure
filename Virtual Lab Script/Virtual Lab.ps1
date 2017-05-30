@@ -11,16 +11,14 @@
 10.  Azure VM agent will be installed auto from he Azure gallery
 #>
 
+#login
+Login-AzureRmAccount
+
 #set the variables for global
 $location = "westeurope"
 $publisher = "MicrosoftWindowsServer"
 $subscription = (Get-AzureRmSubscription).Subscriptionid
 $RGname = "Testlabgmtest70533"
-
-## Compute global
-$offer = "WindowsServer"
-$sku = "2016-Datacenter" 
-$machinesize ="Basic_A0"
 
 
 ## Storage
@@ -31,8 +29,6 @@ $StorAcVM = "vmstestgm70533"
 $StorAcApp = "appstestgm70533"
 $StorAcDiag  = "diagtestgm70533"
 $StorageName = @($StorAcVM,$StorAcApp,$StorAcDiag)
-$RGname = "testlabgmtest70533"
-$location = "westeurope"
 
 
 
@@ -72,18 +68,18 @@ $networkSecurityGroup = New-AzureRmNetworkSecurityGroup -ResourceGroupName $RGna
 -Name "NSG-FrontEnd" -SecurityRules $rdpRule
 
 #this creates both the subnets for network 1 using the variables declared about
-$frontendSubnet = New-AzureRmVirtualNetworkSubnetConfig -Name $Vnet1SN1name `
+$Subnet1 = New-AzureRmVirtualNetworkSubnetConfig -Name $Vnet1SN1name `
 -AddressPrefix $vnet1SN1range -NetworkSecurityGroup $networkSecurityGroup
 
-$backendSubnet = New-AzureRmVirtualNetworkSubnetConfig -Name $Vnet1SN2name -AddressPrefix `
+$Subnet2 = New-AzureRmVirtualNetworkSubnetConfig -Name $Vnet1SN2name -AddressPrefix `
 $vnet1SN2range -NetworkSecurityGroup $networkSecurityGroup
 
 # this creates the first network, using the subnets and NSG described above
 $Vnet1 = New-AzureRmVirtualNetwork -Name $Vnet1name -ResourceGroupName $RGname `
--Location $location -AddressPrefix $vnet1range -Subnet $frontendSubnet,$backendSubnet
+-Location $location -AddressPrefix $vnet1range -Subnet $subnet1,$Subnet2
 
 #this creates  the subnets for network 2 using the variables declared about
-$frontendSubnet2 = New-AzureRmVirtualNetworkSubnetConfig -Name $Vnet2SN1name `
+$subnet3 = New-AzureRmVirtualNetworkSubnetConfig -Name $Vnet2SN1name `
 -AddressPrefix $vnet2SN1range -NetworkSecurityGroup $networkSecurityGroup
 
 $vnet2 = New-AzureRmVirtualNetwork -Name $Vnet2name -ResourceGroupName $RGname `
@@ -109,6 +105,9 @@ $StorageName | ForEach-Object {
 # make 2 public IPs, attach them to 2 network cards
 $Nicname1 = "Nic1"
 $NicName2 = "Nic2"
+$Subnet1 = $Vnet1.Subnets[0].Id
+$Subnet2 = $Vnet1.Subnets[1].Id
+
 
 $PIp1 = New-AzureRmPublicIpAddress -Name $Nicname1 -ResourceGroupName $Rgname -Location $Location -AllocationMethod Dynamic
 $PIp2 = New-AzureRmPublicIpAddress -Name $Nicname2 -ResourceGroupName $Rgname -Location $Location -AllocationMethod Dynamic
@@ -128,6 +127,7 @@ $sku = "2016-Datacenter"
 $VMSize ="Basic_A0"
 $VMname1 = "VMtest1"   #this will also become the actual Computer object. so within the VM image. i.e. the OS or domain computer name
 $VMname2 = "VMtest2"
+$StorageAccount = Get-AzureRmStorageAccount -ResourceGroupName $RGname -Name $StorAcVM
 $OSDiskName1 = $VMName1 + "OSDisk"
 $OSDiskName2 = $VMName2 + "OSDisk"
 

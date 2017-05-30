@@ -17,7 +17,7 @@ Get-AzureRmRoleDefinition
 Get-AzureRmRoleAssignment 
 #can do it fo resource group or for individual -expandprincipalgroups to see the groups they're in and have permissions hat way. 
 
-Get-AzureRmAuthorizationChangeLog -StartTime ([datetime]::Now - [timespan]::FromDays((7)
+Get-AzureRmAuthorizationChangeLog -StartTime ([datetime]::Now - [timespan]::FromDays((7)))
 
 Set-AzureRmVMAccessExtension  #name is just name of the action
 
