@@ -12,7 +12,7 @@
 #>
 
 #login
-Login-AzureRmAccount
+#$login = Login-AzureRmAccount
 
 #set the variables for global
 $location = "westeurope"
