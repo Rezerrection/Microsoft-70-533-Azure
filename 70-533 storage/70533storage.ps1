@@ -8,51 +8,37 @@ $StorAcDiag  = "diagtestgm70533"
 $StorageName = @($StorAcVM,$StorAcApp,$StorAcDiag)
 $RGname = "testlabgmtest70533"
 $location = "westeurope"
-$vhdName = 'osdisk1.vhd'
+$srcBlob = 'osdisk1.vhd'
 $srcCont = "src"
 $destCont = 'dest'
 $srcSA = $StorAcVM
-$destSA = $StorAcVM
+$destSA = $StorAcApp
 
 $StorageName | ForEach-Object {
     New-AzureRmStorageAccount -ResourceGroupName $RGname -Name $_ -Type $StorageType -Location $location
 
 }
 
-
-
-
 Get-Command -Module AzureRM.Storage
-
 
 # Containers
 $srcSAKey = (Get-AzureRmStorageAccountKey -ResourceGroupName $RGname -Name $StorAcVM).value[0]
 $destSAKey = (Get-AzureRmStorageAccountKey -ResourceGroupName $RGname -Name $StorAcApp).value[0]
 $srcContext = New-AzureStorageContext –StorageAccountName $SrcSA -StorageAccountKey $srcSAKey
 $destContext = New-AzureStorageContext –StorageAccountName $destSA -StorageAccountKey $destSAKey
-New-AzureStorageContainer -Name $destContainer -Context $destContext
-New-AzureStorageContainer -Name 'vhds' -Permission Off
+New-AzureStorageContainer -Name $srcCont  -Context $srcContext -Permission Off
+New-AzureStorageContainer -Name $destCont -Context $destContext
 
 # Async blob copy - container to container within 1 storage account
 
-
-Set-AzureSubscription -SubscriptionName '150dollar' -CurrentStorageAccountName '704stor1'
-
-
-Start-AzureStorageBlobCopy -SrcBlob $srcBlob -DestContainer $DestContainer -SrcContainer $SrcContainer 
-
-
-
-
-
-
+Start-AzureStorageBlobCopy -SrcBlob $srcBlob -DestContainer $DestCont -SrcContainer $SrcCont
 $srcContext = New-AzureStorageContext –StorageAccountName $srcStorageAccount -StorageAccountKey $srcStorageKey
 $destContext = New-AzureStorageContext –StorageAccountName $destStorageAccount -StorageAccountKey $destStorageKey
-New-AzureStorageContainer -Name $destContainer -Context $destContext
-$copiedBlob = Start-AzureStorageBlobCopy -SrcBlob $vhdName `
--SrcContainer $srcContainer `
+New-AzureStorageContainer -Name $destCont -Context $destContext
+$copiedBlob = Start-AzureStorageBlobCopy -SrcBlob $srcBlob `
+-SrcContainer $srcCont `
 -Context $srcContext `
--DestContainer $destContainer `
+-DestContainer $destCont `
 -DestBlob $vhdName `
 -DestContext $destContext
 
