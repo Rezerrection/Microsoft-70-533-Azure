@@ -8,9 +8,10 @@ $StorAcDiag  = "diagtestgm70533"
 $StorageName = @($StorAcVM,$StorAcApp,$StorAcDiag)
 $RGname = "testlabgmtest70533"
 $location = "westeurope"
-$srcBlob = 'osdisk1.vhd'
+$srcBlob = "rufus-2.14.exe"
+$destblob = "rufus.exe"
 $srcCont = "src"
-$destCont = 'dest'
+$destCont = "dest"
 $srcSA = $StorAcVM
 $destSA = $StorAcApp
 
@@ -31,7 +32,7 @@ New-AzureStorageContainer -Name $destCont -Context $destContext
 
 # Async blob copy - container to container within 1 storage account
 
-Start-AzureStorageBlobCopy -SrcBlob $srcBlob -DestContainer $DestCont -SrcContainer $SrcCont
+Start-AzureStorageBlobCopy -SrcBlob $srcBlob -DestContainer $DestCont -SrcContainer $SrcCont -SrcContext $srcContext -DestContext $destContext
 $srcContext = New-AzureStorageContext –StorageAccountName $srcStorageAccount -StorageAccountKey $srcStorageKey
 $destContext = New-AzureStorageContext –StorageAccountName $destStorageAccount -StorageAccountKey $destStorageKey
 New-AzureStorageContainer -Name $destCont -Context $destContext
@@ -39,7 +40,7 @@ $copiedBlob = Start-AzureStorageBlobCopy -SrcBlob $srcBlob `
 -SrcContainer $srcCont `
 -Context $srcContext `
 -DestContainer $destCont `
--DestBlob $vhdName `
+-DestBlob $destBlob `
 -DestContext $destContext
 
 # AzCopy reference: https://azure.microsoft.com/en-us/documentation/articles/storage-use-azcopy/#blob-copy
