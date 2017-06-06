@@ -31,3 +31,10 @@ get-azurermvm | Set-AzureRmVMOSDisk
 Get-AzureRmVM | Set-AzureRmVMOSDisk
 
 Add-AzureRmVMDataDisk 
+
+
+#RBAC
+
+Get-AzureRMProviderOperation Microsoft.Compute/virtualMachines/*/action | FT Operation, OperationName
+
+Get-AzureRMProviderOperation Microsoft.Network/*

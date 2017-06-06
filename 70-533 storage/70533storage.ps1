@@ -47,3 +47,27 @@ $copiedBlob = Start-AzureStorageBlobCopy -SrcBlob $srcBlob `
 
 # AzCopy (copy blob within storage account)
 AzCopy /Source:https://704stor1.blob.core.windows.net/cont1 /Dest:https://704stor2.blob.core.windows.net/cont2 /SourceKey:cUYFmD4vnMmmp88ysG2YEGo5AXxe7ivqP1+M9XcodzPzPmsYS99BYOoamk1NKcOakcBM3hqqb0tHPu0c8K6MFQ== /DestKey:azulvQvPXB/K2o+0wZBTvEuRAcMprAQb07YmBvboDZ2fQl44KrDjTVzDF1Ks6Xk6qlAvMW+4JHIgSdirugSfYg== /Pattern:report1.xlsx
+
+
+#region Enable metrics and logging
+
+Help Set-AzureStorageServiceLoggingProperty -Examples
+
+# remember to include a storage context (defaults to current storage account - Get-AzureSubscription)
+# retention from 0 (infinite) to 365 days
+
+Get-AzureSubscription | Select-Object -Property CurrentStorageAccountName
+
+Help Set-AzureStorageServiceMetricsProperty -Examples
+
+#endregion
+
+#region Download log files
+
+Get-AzureStorageBlob -Container '$logs' |
+    Where-Object { $_.Name -match 'blob/2016/04/27/1500' } |
+        Out-GridView -Title 'Storage Account Logs'
+
+Get-AzureStorageBlobContent -Container '$logs' -Blob 'blob/2016/04/27/1500/000002.log'
+
+#endregion
