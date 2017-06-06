@@ -59,5 +59,5 @@ Set-AzureRmResource -PropertyObject $PropertiesObject -ResourceGroupName myResou
 -ResourceName $webappname/staging/web -ApiVersion 2015-08-01 -Force
 
 # Swap the verified/warmed up staging slot into production.
-Swap-AzureRmWebAppSlot -Name $webappname -ResourceGroupName myResourceGroup `
--SourceSlotName staging -DestinationSlotName production
+Swap-AzureRmWebAppSlot -Name $webappname -ResourceGroupName $resourcegroupname `
+-SourceSlotName "test" -DestinationSlotName production

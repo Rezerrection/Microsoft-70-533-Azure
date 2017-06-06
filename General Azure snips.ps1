@@ -35,6 +35,9 @@ Add-AzureRmVMDataDisk
 
 #RBAC
 
-Get-AzureRMProviderOperation Microsoft.Compute/virtualMachines/*/action | FT Operation, OperationName
+Get-AzureRMProviderOperation Microsoft.Compute/*/*/action | FT Operation, OperationName
 
 Get-AzureRMProviderOperation Microsoft.Network/*
+
+Set-AzureVNetGatewayKey -VNetName "Group classictormgroup ClassicVNet" `
+-LocalNetworkSiteName "BFB81A46_rmlocalvnet" -SharedKey abc123
