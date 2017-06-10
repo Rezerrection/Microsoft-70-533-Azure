@@ -1,12 +1,12 @@
 ﻿### Define variables
-{
+
 $resourcegrouplocation = 'west europe'
 $resourceGroupName = 'pluralsight-arm-unicornerpaas-templategm'
 $resourceDeploymentName = 'pluralsight-arm-unicornerpaas-template-deploymentgm'
-$templatePath = 'C:\Users\breau\Documents\Visual Studio 2017\Projects'
+$templatePath = 'C:\Users\breau\repos\Microsoft-70-533-Azure\70-533 ARM templates\Unicorner paas'
 $templateFile = 'unicornerPaas.json'
 $template = $templatePath + '\' + $templateFile
-}
+
 
 ### Create Resource Group
 
