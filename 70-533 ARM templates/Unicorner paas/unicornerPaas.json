@@ -1,0 +1,93 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "webAppNamePrefix": {
+      "type": "string",
+      "minLength": 1,
+      "defaultValue": "unico"
+    },
+    "ServerfarmSkuName": {
+      "type": "string",
+      "defaultValue": "S1",
+      "allowedValues": [
+        "F1",
+        "D1",
+        "B1",
+        "B2",
+        "B3",
+        "S1",
+        "S2",
+        "S3",
+        "P1",
+        "P2",
+        "P3",
+        "P4"
+      ],
+      "metadata": {
+        "description": "Describes plan's pricing tier and capacity. Check details at https://azure.microsoft.com/en-us/pricing/details/app-service/"
+      }
+    },
+    
+    "WebAppLocations" : {
+      "type": "array",
+      "defaultValue": ["West Europe","West US", "Southeast Asia", "Australia Southeast"]
+  }
+  },
+
+  "variables": {
+
+
+  },
+
+  "resources": [
+    {
+      "name": "[concat(parameters('webAppNamePrefix'),'-farm-',copyIndex())]",
+      "type": "Microsoft.Web/serverfarms",
+      "location": "[parameters('webAppLocations')[copyIndex()]]", //this is an array, copy index is the obj number in the array
+      "apiVersion": "2015-08-01",
+      "copy": {
+        "count": "[length(parameters('WebAppLocations'))]", //length seems to function more as a count here. so it's the number of objs in the array
+          "name": "farmCopy"
+      },
+        "sku": {
+          "name": "[parameters('ServerfarmSkuName')]"
+        },
+        "dependsOn": [],
+      "tags": {
+        "displayName": "[concat(parameters('webAppNamePrefix'),'-farm-',copyIndex())]"
+      },
+      "properties": {
+        "name": "[concat(parameters('webAppNamePrefix'),'-farm-',copyIndex())]",
+        "numberOfWorkers": 1
+      }
+      },
+    {
+      "name": "[concat(parameters('webAppNamePrefix'),'-site-',copyIndex())]",
+      "type": "Microsoft.Web/sites",
+      "location": "[parameters('webAppLocations')[copyIndex()]]",
+      "apiVersion": "2015-08-01",
+      "copy": {
+        "count": "[length(parameters('WebAppLocations'))]", //same as above
+          "name" : "siteCopy"  //name of the copy job
+      },
+      "dependsOn": [
+        "farmCopy" //this makes it so it just means that the webserverfarm copy job is done. i.e. there's a webappplan to deploy to
+      ],
+      "tags": {
+        "[concat('hidden-related:', resourceId('Microsoft.Web/serverfarms', concat(parameters('webAppNamePrefix'),'-farm-',copyIndex())))]": "Resource",
+        "displayName": "[concat(parameters('webAppNamePrefix'),'-site-',copyIndex())]"
+      },
+      "properties": {
+        "name": "[concat(parameters('webAppNamePrefix'),'-site-',copyIndex())]",
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', concat(parameters('webAppNamePrefix'),'-farm-',copyIndex()))]"
+      }
+    },
+    {
+      "name": "[concat(parameters('webAppNamePrefix'),'-tm')]"
+    }
+  ],
+    "outputs": {
+
+  }
+}
