@@ -23,3 +23,4 @@ New-AzureRmResourceGroupDeployment `
     -ResourceGroupName $resourceGroupName `
     -TemplateFile $template `
     -Verbose -Force
+
